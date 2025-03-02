@@ -144,6 +144,107 @@ app.post('/add-product',async(req,res)=>{
         return res.status(500).json({message:'Internal server error'})
     }
 })
+// task-5 create a route to see particular product
+app.get('/product/:id',async(req,res)=>{
+    try{
+        const{id}=req.params;
+        if(!id){
+            return res.status(400).json({message:'product is missing'})
+        }
+        const{token}=req.headers;
+        const userEmailFromToken=jwt.verify(token,'supersecret');
+        if(userEmailFromToken.email){
+            const product=await Product.findById(id);
+
+            if(!product){
+                return res.status(400).json({message:'product not found'})
+            }
+            return res.status(200).json({message:'success',product});
+        }
+    }catch(error){
+        console.log(error);
+        return res.status(500).json({message:'Internal server error'})
+    }
+
+})
+//task-6 update product
+app.patch("/product/edit/:id", async (req, res) => {
+    const { id } = req.params;
+    const { token } = req.headers;
+    const body = req.body.productData;
+    const name = body.name;
+    const description = body.description;
+    const image = body.image;
+    const price = body.price;
+    const brand = body.brand;
+    const stock = body.stock;
+    const userEmail = jwt.verify(token, "supersecret");
+    try {
+      console.log({
+        name,
+        description,
+        image,
+        price,
+        brand,
+        stock,
+      });
+      if (userEmail.email) {
+        const updatedProduct = await Product.findByIdAndUpdate(id, {
+          name,
+          description,
+          image,
+          price,
+          brand,
+          stock,
+        });
+        res.status(200).json({ message: "Product Updated Succesfully" });
+      }
+    } catch (error) {
+      res.status(400).json({
+        message: "Internal Server Error Occured While Updating Product",
+      });
+    }
+  });
+  // task-7 create route to delelte product
+  app.delete('/product/delete/:id',async(req,res)=>{
+    const {id}=req.params;
+    if(!id){
+        return res.status(400).json({message:'prodcut id not found'})
+    }
+    try{
+        const deleteProduct=await Product.findByIdAndDelete(id);
+        if(!deleteProduct){
+            res.status(404).json({message:"product not found "})
+        }
+        res.status(200).json({message:'product deleted successfully',product:deleteProduct})
+    }catch (error) {
+        res.status(400).json({
+          message: "Internal Server Error Occured While Updating Product",
+        });
+      }
+  })
+  //task-8 search product
+  app.get('/product/search/:keyword',async(req,res)=>{
+    const {keyword}=req.params;
+    try{
+        const prodcuts=await Product.find({
+            name:{$regex:keyword,$options:"i"}
+    });
+    if(prodcuts.length===0){
+        return res.status(404).json({message:'no product found'})
+    }
+    return res.status(200).json({
+        message:'product found',
+        products:products
+    })
+    }catch (error) {
+        res.status(400).json({
+          message: "Internal Server Error Occured While Updating Product",
+        });
+      }
+
+  })
+
 
 
 
